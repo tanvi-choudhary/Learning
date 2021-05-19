@@ -1,0 +1,34 @@
+import pandas as pd
+import pyodbc
+from datetime import datetime
+
+#get current date
+now =  datetime.now()
+
+#Load text file
+path = "C:\\User\\Tanvi\\Python\\"
+filename = "Test_Python.txt"
+dataColumns = ['ID','Value']
+myData = pd.read_csv(path+ filename, header=None, Names=dataColumns)
+df = pd.DataFrame(mydata,columns=dataColumns)
+
+#Connect to SQL server
+conn= pyodbc.connect("Driver={SQL Server};Server= devserver/instance01;Database=master;")
+conn1 = pyodbc.connect("Driver={SQL Server};Server= devserver/instance01;Database=msdb;")
+cursor = conn.cursor()
+
+cursor.execute('''Insert into master.dbo.TestAudit (ID,Count,start_time) values (?,?,?)''',(4,3,now))
+
+#Insert values from .txt file into SQL table
+for row in df.intertuples():
+    cursor.execute('''insert into msdb.dbo.TestLoad(ID,Value) values (?,?)''',row.ID,row.Value)
+    
+now =  datetime.now()
+cursor.execute('''update master.dbo.TestAudit set END_Time = ? where ID = (select max(ID) from master.dbo.TestAudit)''',now1)
+
+cursor.commit()
+cursor.close()
+conn1.close()
+conn.close()
+
+
